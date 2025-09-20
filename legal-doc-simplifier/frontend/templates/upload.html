@@ -1,0 +1,305 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Document - Legal Document Simplifier{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header -->
+    <div style="margin-bottom: 2rem;">
+        <h1 class="page-title">Upload Document</h1>
+        <p class="page-subtitle">Upload your legal document for AI-powered analysis and simplification</p>
+    </div>
+
+    <!-- Upload Section -->
+    <div style="max-width: 600px; margin: 0 auto;">
+        <div class="card">
+            <div class="card-body" style="padding: 2rem;">
+                <!-- File Upload Area -->
+                <div id="upload-area" class="upload-area">
+                    <input type="file" id="file-input" style="display: none;" accept=".pdf,.docx,.doc,.jpg,.jpeg,.png,.bmp,.tiff,.tif">
+                    
+                    <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                    <div class="upload-text">Drop your document here or click to browse</div>
+                    <div class="upload-subtext">Supports PDF, Word documents, and images (Max 16MB)</div>
+                </div>
+
+                <!-- Upload Progress -->
+                <div id="upload-progress" class="hidden" style="margin-top: 1.5rem;">
+                    <div style="margin-bottom: 0.5rem; font-weight: 500;">Uploading...</div>
+                    <div style="background: var(--bg-tertiary); border-radius: var(--radius); height: 8px; overflow: hidden;">
+                        <div id="progress-bar" style="background: var(--primary-color); height: 100%; width: 0%; transition: width 0.3s ease;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Supported Formats -->
+        <div style="margin-top: 2rem;">
+            <h3 class="section-title">Supported Document Types</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <div class="card" style="padding: 1.5rem; text-align: center;">
+                    <i class="fas fa-file-pdf" style="font-size: 2rem; color: #dc2626; margin-bottom: 0.5rem;"></i>
+                    <h4 style="margin-bottom: 0.25rem;">PDF Documents</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Contracts, agreements, policies</p>
+                </div>
+                
+                <div class="card" style="padding: 1.5rem; text-align: center;">
+                    <i class="fas fa-file-word" style="font-size: 2rem; color: #2563eb; margin-bottom: 0.5rem;"></i>
+                    <h4 style="margin-bottom: 0.25rem;">Word Documents</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">.docx and .doc formats</p>
+                </div>
+                
+                <div class="card" style="padding: 1.5rem; text-align: center;">
+                    <i class="fas fa-image" style="font-size: 2rem; color: var(--accent-color); margin-bottom: 0.5rem;"></i>
+                    <h4 style="margin-bottom: 0.25rem;">Images</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Scanned documents with OCR</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Processing Steps -->
+        <div style="margin-top: 2rem;">
+            <h3 class="section-title">What Happens Next?</h3>
+            <div class="card" style="padding: 1.5rem;">
+                <div style="display: grid; gap: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="width: 32px; height: 32px; background: var(--primary-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem; flex-shrink: 0;">1</div>
+                        <div>
+                            <strong>Text Extraction</strong>
+                            <div style="color: var(--text-secondary); font-size: 0.9rem;">We extract and clean the text from your document</div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="width: 32px; height: 32px; background: var(--success-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem; flex-shrink: 0;">2</div>
+                        <div>
+                            <strong>AI Analysis</strong>
+                            <div style="color: var(--text-secondary); font-size: 0.9rem;">Our AI identifies clauses, risks, obligations, and deadlines</div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="width: 32px; height: 32px; background: var(--accent-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem; flex-shrink: 0;">3</div>
+                        <div>
+                            <strong>Simplification</strong>
+                            <div style="color: var(--text-secondary); font-size: 0.9rem;">Complex legal language is converted to plain English</div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="width: 32px; height: 32px; background: var(--warning-color); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem; flex-shrink: 0;">4</div>
+                        <div>
+                            <strong>Risk Assessment</strong>
+                            <div style="color: var(--text-secondary); font-size: 0.9rem;">We provide recommendations and highlight important information</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Privacy Notice -->
+        <div style="margin-top: 2rem;">
+            <div style="background: rgb(59 130 246 / 0.05); border: 1px solid rgb(59 130 246 / 0.2); border-radius: var(--radius-lg); padding: 1.5rem;">
+                <div style="display: flex; align-items: flex-start; gap: 1rem;">
+                    <i class="fas fa-shield-alt" style="color: var(--primary-color); margin-top: 0.25rem;"></i>
+                    <div>
+                        <h4 style="margin-bottom: 0.5rem; color: var(--primary-color);">Your Privacy is Protected</h4>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; margin: 0;">
+                            Your documents are processed securely and are only accessible by you. We use enterprise-grade encryption 
+                            and do not share your data with third parties. Documents can be deleted at any time.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_scripts %}
+<script>
+// Upload-specific functionality
+document.addEventListener('DOMContentLoaded', function() {
+    initializeFileUpload();
+});
+
+// Enhanced file upload with progress tracking
+async function uploadDocument(file, onProgress) {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    try {
+        // Show upload progress
+        showUploadProgress();
+        updateProgressBar(0);
+        
+        showLoading('Uploading document...');
+        
+        const response = await fetch(`${App.apiBase}/documents/upload`, {
+            method: 'POST',
+            body: formData,
+            credentials: 'include'
+        });
+        
+        updateProgressBar(50);
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Upload failed');
+        }
+        
+        const data = await response.json();
+        updateProgressBar(100);
+        
+        showToast('Document uploaded successfully!', 'success');
+        
+        // Start processing
+        setTimeout(async () => {
+            hideUploadProgress();
+            await processDocument(data.document.id);
+        }, 500);
+        
+        return data.document;
+        
+    } catch (error) {
+        hideUploadProgress();
+        showToast(`Upload failed: ${error.message}`, 'error');
+        throw error;
+    } finally {
+        hideLoading();
+    }
+}
+
+function showUploadProgress() {
+    const progressDiv = document.getElementById('upload-progress');
+    const uploadArea = document.getElementById('upload-area');
+    
+    if (progressDiv) progressDiv.classList.remove('hidden');
+    if (uploadArea) uploadArea.style.opacity = '0.5';
+}
+
+function hideUploadProgress() {
+    const progressDiv = document.getElementById('upload-progress');
+    const uploadArea = document.getElementById('upload-area');
+    
+    if (progressDiv) progressDiv.classList.add('hidden');
+    if (uploadArea) uploadArea.style.opacity = '1';
+    updateProgressBar(0);
+}
+
+function updateProgressBar(percentage) {
+    const progressBar = document.getElementById('progress-bar');
+    if (progressBar) {
+        progressBar.style.width = `${percentage}%`;
+    }
+}
+
+// Enhanced file validation
+function validateFile(file) {
+    // Check file size (16MB limit)
+    const maxSize = 16 * 1024 * 1024;
+    if (file.size > maxSize) {
+        throw new Error('File size must be less than 16MB');
+    }
+    
+    // Check file type
+    const allowedTypes = [
+        'application/pdf',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/msword',
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'image/bmp',
+        'image/tiff',
+        'image/tif'
+    ];
+    
+    const allowedExtensions = ['pdf', 'docx', 'doc', 'jpg', 'jpeg', 'png', 'bmp', 'tiff', 'tif'];
+    const fileExtension = file.name.split('.').pop().toLowerCase();
+    
+    if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(fileExtension)) {
+        throw new Error('Unsupported file type. Please upload PDF, Word document, or image file.');
+    }
+    
+    return true;
+}
+
+// Enhanced file selection handler
+async function handleFileSelection(event) {
+    const files = Array.from(event.target.files || event.dataTransfer?.files || []);
+    
+    if (files.length === 0) return;
+    
+    const file = files[0];
+    
+    try {
+        // Validate file
+        validateFile(file);
+        
+        // Upload and process
+        const document = await uploadDocument(file);
+        
+        // Redirect to document view after processing starts
+        setTimeout(() => {
+            window.location.href = `/document/${document.id}`;
+        }, 2000);
+        
+    } catch (error) {
+        console.error('File handling failed:', error);
+        showToast(error.message, 'error');
+    }
+    
+    // Reset file input
+    if (event.target) {
+        event.target.value = '';
+    }
+}
+
+// Drag and drop enhancements
+function initializeFileUpload() {
+    const uploadArea = document.getElementById('upload-area');
+    const fileInput = document.getElementById('file-input');
+    
+    if (!uploadArea || !fileInput) return;
+    
+    // Click to select file
+    uploadArea.addEventListener('click', () => {
+        fileInput.click();
+    });
+    
+    // File selection handling
+    fileInput.addEventListener('change', handleFileSelection);
+    
+    // Enhanced drag and drop
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        uploadArea.classList.add('dragover');
+    });
+    
+    uploadArea.addEventListener('dragenter', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        uploadArea.classList.add('dragover');
+    });
+    
+    uploadArea.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        // Only remove dragover if leaving the upload area entirely
+        if (!uploadArea.contains(e.relatedTarget)) {
+            uploadArea.classList.remove('dragover');
+        }
+    });
+    
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        uploadArea.classList.remove('dragover');
+        
+        handleFileSelection(e);
+    });
+}
+</script>
+{% endblock %}
+{% endblock %}

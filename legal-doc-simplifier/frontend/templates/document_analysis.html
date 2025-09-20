@@ -1,0 +1,577 @@
+<!-- templates/document_analysis.html -->
+{% extends "base.html" %}
+
+{% block title %}Document Analysis - Legal Document Simplifier{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Loading State -->
+    <div id="loading-state" class="hidden">
+        <div style="text-align: center; padding: 3rem;">
+            <div class="loading-spinner" style="margin: 0 auto 2rem;"></div>
+            <h2>Processing your document...</h2>
+            <p style="color: var(--text-secondary);">This may take a few minutes depending on document size</p>
+        </div>
+    </div>
+
+    <!-- Document Header -->
+    <div id="document-header" class="hidden" style="margin-bottom: 2rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h1 id="document-title" class="page-title">Document Analysis</h1>
+                <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                    <span id="document-type" class="status-badge status-completed">Unknown Type</span>
+                    <span id="document-status" class="status-badge status-processing">Processing</span>
+                    <span id="risk-score" class="risk-indicator risk-low">Risk: 0/100</span>
+                </div>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <button class="btn btn-secondary" onclick="downloadDocument()">
+                    <i class="fas fa-download"></i>
+                    Download
+                </button>
+                <button class="btn btn-secondary" onclick="shareDocument()">
+                    <i class="fas fa-share-alt"></i>
+                    Share
+                </button>
+                <button class="btn btn-danger" onclick="deleteCurrentDocument()">
+                    <i class="fas fa-trash"></i>
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Document Summary -->
+    <div id="document-summary" class="card hidden" style="margin-bottom: 2rem;">
+        <div class="card-header">
+            <h2 style="margin: 0;">Document Summary</h2>
+        </div>
+        <div class="card-body">
+            <div id="summary-content">
+                <p style="color: var(--text-secondary);">Summary will appear here after processing...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; align-items: start;">
+        <!-- Document Clauses -->
+        <div>
+            <!-- Clause Filters -->
+            <div class="card" style="margin-bottom: 1rem;">
+                <div class="card-body" style="padding: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                        <span style="font-weight: 500;">Filter by:</span>
+                        <select id="clause-type-filter" class="form-select" style="width: auto;">
+                            <option value="">All Types</option>
+                            <option value="obligation">Obligations</option>
+                            <option value="right">Rights</option>
+                            <option value="risk">Risks</option>
+                            <option value="penalty">Penalties</option>
+                            <option value="deadline">Deadlines</option>
+                        </select>
+                        <select id="risk-level-filter" class="form-select" style="width: auto;">
+                            <option value="">All Risk Levels</option>
+                            <option value="low">Low Risk</option>
+                            <option value="medium">Medium Risk</option>
+                            <option value="high">High Risk</option>
+                        </select>
+                        <button class="btn btn-sm btn-secondary" onclick="clearFilters()">
+                            <i class="fas fa-times"></i>
+                            Clear
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Clauses Container -->
+            <div id="clauses-container">
+                <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                    <i class="fas fa-file-alt" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                    <p>Clauses will appear here after processing</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div>
+            <!-- Q&A Section -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="card-header">
+                    <h3 style="margin: 0;">
+                        <i class="fas fa-question-circle"></i>
+                        Ask Questions
+                    </h3>
+                </div>
+                <div class="card-body" style="padding: 0;">
+                    <div class="qa-container">
+                        <div class="qa-input">
+                            <input type="text" id="qa-input" placeholder="Ask about this document..." onkeypress="handleQuestionKeyPress(event)">
+                            <button class="btn btn-primary btn-sm" onclick="submitQuestion()">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                        <div class="qa-messages" id="qa-messages">
+                            <div style="text-align: center; color: var(--text-secondary); padding: 2rem 1rem;">
+                                <i class="fas fa-comments" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+                                <p>Ask me anything about this document!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Suggested Questions -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="card-header">
+                    <h3 style="margin: 0; font-size: 1rem;">Suggested Questions</h3>
+                </div>
+                <div class="card-body">
+                    <div id="qa-suggestions" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                            Loading suggestions...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="card-header">
+                    <h3 style="margin: 0; font-size: 1rem;">Quick Stats</h3>
+                </div>
+                <div class="card-body">
+                    <div id="quick-stats">
+                        <div style="display: grid; gap: 0.75rem;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Total Clauses:</span>
+                                <strong id="total-clauses">-</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>High Risk:</span>
+                                <strong id="high-risk-count" style="color: var(--danger-color);">-</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Deadlines:</span>
+                                <strong id="deadline-count" style="color: var(--warning-color);">-</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Obligations:</span>
+                                <strong id="obligation-count" style="color: var(--accent-color);">-</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Items -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 style="margin: 0; font-size: 1rem;">
+                        <i class="fas fa-tasks"></i>
+                        Action Items
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div id="action-items">
+                        <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                            Action items will appear after processing
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@media (max-width: 968px) {
+    div[style*="grid-template-columns: 2fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+    
+    #document-header div[style*="justify-content: space-between"] {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+}
+
+.clause-container.collapsed .clause-body {
+    display: none;
+}
+
+.clause-header {
+    cursor: pointer;
+}
+
+.clause-header:hover {
+    background: var(--bg-secondary);
+}
+</style>
+
+{% block extra_scripts %}
+<script>
+let currentDocumentId = null;
+let documentData = null;
+
+
+// Initialize document analysis page
+document.addEventListener('DOMContentLoaded', function() {
+    const path = window.location.pathname;
+    if (path.startsWith('/document/')) {
+        currentDocumentId = path.split('/')[2];
+        loadDocumentAnalysis(currentDocumentId);
+    }
+});
+
+// Enhanced document loading with real-time updates
+async function loadDocumentAnalysis(documentId) {
+    currentDocumentId = documentId;
+    
+    try {
+        showLoadingState();
+        
+        // Check processing status first
+        const statusResponse = await apiCall(`/agents/process-status/${documentId}`);
+        
+        if (statusResponse.status === 'processing') {
+            // Poll for completion
+            pollProcessingStatus(documentId);
+            return;
+        }
+        
+        // Load complete document
+        const response = await apiCall(`/documents/${documentId}`);
+        documentData = response;
+        
+        renderDocumentAnalysis(response);
+        
+        // Load additional data
+        const [suggestions, riskAnalysis] = await Promise.all([
+            getSuggestedQuestions(documentId),
+            loadRiskAnalysis(documentId).catch(() => null)
+        ]);
+        
+        renderQASuggestions(suggestions, documentId);
+        if (riskAnalysis) {
+            renderRiskAnalysis(riskAnalysis);
+        }
+        
+    } catch (error) {
+        showToast('Failed to load document analysis', 'error');
+        console.error('Document load failed:', error);
+    } finally {
+        hideLoadingState();
+    }
+}
+
+// Polling for processing completion
+async function pollProcessingStatus(documentId) {
+    const maxAttempts = 30; // 5 minutes max
+    let attempts = 0;
+    
+    const poll = async () => {
+        try {
+            const status = await apiCall(`/agents/process-status/${documentId}`);
+            
+            if (status.status === 'completed') {
+                // Reload with complete data
+                loadDocumentAnalysis(documentId);
+                return;
+            }
+            
+            if (status.status === 'failed') {
+                throw new Error('Document processing failed');
+            }
+            
+            attempts++;
+            if (attempts < maxAttempts) {
+                setTimeout(poll, 10000); // Check every 10 seconds
+            } else {
+                throw new Error('Processing timeout');
+            }
+            
+        } catch (error) {
+            hideLoadingState();
+            showToast('Document processing failed', 'error');
+        }
+    };
+    
+    poll();
+}
+
+function showLoadingState() {
+    document.getElementById('loading-state').classList.remove('hidden');
+    document.getElementById('document-header').classList.add('hidden');
+    document.getElementById('document-summary').classList.add('hidden');
+}
+
+function hideLoadingState() {
+    document.getElementById('loading-state').classList.add('hidden');
+    document.getElementById('document-header').classList.remove('hidden');
+    document.getElementById('document-summary').classList.remove('hidden');
+}
+
+function renderDocumentAnalysis(documentData) {
+    // Update header
+    document.getElementById('document-title').textContent = documentData.filename;
+    document.getElementById('document-type').textContent = documentData.document_type || 'Unknown Type';
+    document.getElementById('document-status').textContent = documentData.status;
+    document.getElementById('document-status').className = `status-badge status-${documentData.status}`;
+    
+    if (documentData.risk_score !== null) {
+        const riskLevel = getRiskLevel(documentData.risk_score);
+        document.getElementById('risk-score').textContent = `Risk: ${documentData.risk_score}/100`;
+        document.getElementById('risk-score').className = `risk-indicator risk-${riskLevel}`;
+    }
+    
+    // Update summary
+    // Update summary - FIXED VERSION
+    if (documentData.summary) {
+        document.getElementById('summary-content').innerHTML = `<p>${documentData.summary}</p>`;
+    } else {
+        document.getElementById('summary-content').innerHTML = `<p style="color: var(--text-secondary);">Document summary is being generated...</p>`;
+    }
+    
+    // Render clauses
+    renderClauses(documentData.clauses || []);
+    
+    // Update quick stats
+    updateQuickStats(documentData);
+}
+
+function renderClauses(clauses) {
+    console.log('Rendering clauses:', clauses);
+    const container = document.getElementById('clauses-container');
+    
+    if (!clauses || clauses.length === 0) {
+        console.log('No clauses found');
+        container.innerHTML = `
+            <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                <i class="fas fa-file-alt" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                <p>No clauses found in this document</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = clauses.map(clause => `
+        <div class="clause-container" data-type="${clause.clause_type}" data-risk="${clause.risk_level}">
+            <div class="clause-header" onclick="toggleClause(this)">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <span class="clause-type ${clause.clause_type}">
+                            <i class="fas fa-${getClauseIcon(clause.clause_type)}"></i>
+                            ${clause.clause_type}
+                        </span>
+                        <span style="font-size: 0.9rem; color: var(--text-secondary);">Section ${clause.section_number}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span class="risk-indicator risk-${clause.risk_level}">${clause.risk_level} risk</span>
+                        <i class="fas fa-chevron-down" style="transition: transform 0.2s;"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="clause-body">
+                <div class="clause-text">${clause.simplified_text}</div>
+                <!-- Original text hidden: only simplified text is shown to users -->
+                ${clause.deadlines && clause.deadlines.length > 0 ? `
+                    <div style="margin-top: 1rem; padding: 1rem; background: rgb(245 158 11 / 0.1); border-radius: var(--radius); border-left: 4px solid var(--warning-color);">
+                        <strong>Deadlines:</strong>
+                        <ul style="margin: 0.5rem 0 0 1rem;">
+                            ${clause.deadlines.map(deadline => `<li>${deadline}</li>`).join('')}
+                        </ul>
+                    </div>
+                ` : ''}
+                ${clause.obligations && clause.obligations.length > 0 ? `
+                    <div style="margin-top: 1rem; padding: 1rem; background: rgb(16 185 129 / 0.1); border-radius: var(--radius); border-left: 4px solid var(--accent-color);">
+                        <strong>Obligations:</strong>
+                        <ul style="margin: 0.5rem 0 0 1rem;">
+                            ${clause.obligations.map(obligation => `<li>${obligation}</li>`).join('')}
+                        </ul>
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+    `).join('');
+}
+
+function getClauseIcon(type) {
+    const icons = {
+        obligation: 'tasks',
+        right: 'shield-alt',
+        risk: 'exclamation-triangle',
+        penalty: 'gavel',
+        deadline: 'clock',
+        general: 'file-alt'
+    };
+    return icons[type] || 'file-alt';
+}
+
+function toggleClause(header) {
+    const container = header.parentElement;
+    const icon = header.querySelector('.fa-chevron-down');
+    
+    container.classList.toggle('collapsed');
+    icon.style.transform = container.classList.contains('collapsed') ? 'rotate(-90deg)' : 'rotate(0deg)';
+}
+
+function updateQuickStats(documentData) {
+    const clauses = documentData.clauses || [];
+    
+    document.getElementById('total-clauses').textContent = clauses.length;
+    document.getElementById('high-risk-count').textContent = 
+        clauses.filter(c => c.risk_level === 'high').length;
+    document.getElementById('deadline-count').textContent = 
+        clauses.filter(c => c.clause_type === 'deadline' || (c.deadlines && c.deadlines.length > 0)).length;
+    document.getElementById('obligation-count').textContent = 
+        clauses.filter(c => c.clause_type === 'obligation' || (c.obligations && c.obligations.length > 0)).length;
+}
+
+// Filter functionality
+document.getElementById('clause-type-filter').addEventListener('change', filterClauses);
+document.getElementById('risk-level-filter').addEventListener('change', filterClauses);
+
+function filterClauses() {
+    const typeFilter = document.getElementById('clause-type-filter').value;
+    const riskFilter = document.getElementById('risk-level-filter').value;
+    const clauses = document.querySelectorAll('.clause-container');
+    
+    clauses.forEach(clause => {
+        const matchesType = !typeFilter || clause.dataset.type === typeFilter;
+        const matchesRisk = !riskFilter || clause.dataset.risk === riskFilter;
+        
+        clause.style.display = (matchesType && matchesRisk) ? 'block' : 'none';
+    });
+}
+
+function clearFilters() {
+    document.getElementById('clause-type-filter').value = '';
+    document.getElementById('risk-level-filter').value = '';
+    filterClauses();
+}
+
+// Q&A functionality
+function handleQuestionKeyPress(event) {
+    if (event.key === 'Enter') {
+        submitQuestion();
+    }
+}
+
+async function submitQuestion() {
+    const input = document.getElementById('qa-input');
+    const question = input.value.trim();
+    
+    if (!question || !currentDocumentId) return;
+    
+    try {
+        const response = await askQuestion(question, currentDocumentId);
+        displayQAResponse(question, response);
+        input.value = '';
+        
+    } catch (error) {
+        console.error('Question failed:', error);
+    }
+}
+
+function displayQAResponse(question, response) {
+    const messagesContainer = document.getElementById('qa-messages');
+    
+    // Clear placeholder if it exists
+    if (messagesContainer.innerHTML.includes('Ask me anything')) {
+        messagesContainer.innerHTML = '';
+    }
+    
+    const messageHtml = `
+        <div class="qa-message question">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                <i class="fas fa-user"></i>
+                <strong>You</strong>
+            </div>
+            <div>${question}</div>
+        </div>
+        <div class="qa-message answer">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                <i class="fas fa-robot"></i>
+                <strong>AI Assistant</strong>
+            </div>
+            <div>${response.answer}</div>
+            ${response.sources && response.sources.length > 0 ? `
+                <div style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-secondary);">
+                    <i class="fas fa-link"></i>
+                    <strong>Sources:</strong> Sections ${response.sources.map(s => s.section).join(', ')}
+                </div>
+            ` : ''}
+            ${response.confidence ? `
+                <div style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-muted);">
+                    Confidence: ${Math.round(response.confidence * 100)}%
+                </div>
+            ` : ''}
+        </div>
+    `;
+    
+    messagesContainer.insertAdjacentHTML('beforeend', messageHtml);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+function renderQASuggestions(suggestions, documentId) {
+    const container = document.getElementById('qa-suggestions');
+    if (!container || !suggestions.length) {
+        container.innerHTML = '<div style="color: var(--text-secondary); font-size: 0.9rem;">No suggestions available</div>';
+        return;
+    }
+    
+    container.innerHTML = suggestions.map(suggestion => `
+        <button class="btn btn-sm btn-secondary" onclick="askQuestionFromSuggestion('${suggestion.replace(/'/g, "\\'")}', '${documentId}')" 
+                style="text-align: left; justify-content: flex-start;">
+            ${suggestion}
+        </button>
+    `).join('');
+}
+
+async function askQuestionFromSuggestion(question, documentId) {
+    const qaInput = document.getElementById('qa-input');
+    if (qaInput) {
+        qaInput.value = question;
+        await submitQuestion();
+    }
+}
+
+// Document actions
+function shareDocument() {
+    if (navigator.share) {
+        navigator.share({
+            title: documentData?.filename || 'Legal Document Analysis',
+            url: window.location.href
+        });
+    } else {
+        navigator.clipboard.writeText(window.location.href);
+        showToast('Link copied to clipboard', 'success');
+    }
+}
+
+function deleteCurrentDocument() {
+    if (currentDocumentId) {
+        deleteDocument(currentDocumentId).then(() => {
+            window.location.href = '/dashboard';
+        });
+    }
+}
+
+async function loadRiskAnalysis(documentId) {
+    try {
+        return await apiCall(`/agents/analyze-risks/${documentId}`, { method: 'POST' });
+    } catch (error) {
+        console.error('Risk analysis failed:', error);
+        return null;
+    }
+}
+
+function renderRiskAnalysis(riskData) {
+    // This could be enhanced to show detailed risk analysis
+    console.log('Risk analysis:', riskData);
+}
+</script>
+{% endblock %}
+{% endblock %}

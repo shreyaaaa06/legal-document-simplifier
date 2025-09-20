@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Legal Document Simplifier{% endblock %}
+
+{% block content %}
+<div class="container-sm" style="padding-top: 2rem;">
+    <div class="card" style="max-width: 400px; margin: 0 auto;">
+        <div class="card-body" style="padding: 2rem;">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <i class="fas fa-scale-balanced" style="font-size: 3rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
+                <h2 style="margin-bottom: 0.5rem;">Create Account</h2>
+                <p style="color: var(--text-secondary);">Join thousands of users simplifying legal documents</p>
+            </div>
+
+            <form id="register-form">
+                <div class="form-group">
+                    <label for="name" class="form-label">Full Name</label>
+                    <input type="text" id="name" name="name" class="form-input" placeholder="Enter your full name">
+                </div>
+
+                <div class="form-group">
+                    <label for="email" class="form-label">Email Address</label>
+                    <input type="email" id="email" name="email" class="form-input" required placeholder="Enter your email">
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" id="password" name="password" class="form-input" required placeholder="Create a password" minlength="6">
+                    <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                        Must be at least 6 characters long
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword" class="form-label">Confirm Password</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" class="form-input" required placeholder="Confirm your password">
+                </div>
+
+                <div class="form-group">
+                    <label style="display: flex; align-items: flex-start; gap: 0.75rem; font-size: 0.95rem; line-height: 1.5;">
+                        <input type="checkbox" required style="margin-top: 0.25rem;">
+                        <span>
+                            I agree to the 
+                            <a href="#" style="color: var(--primary-color); text-decoration: none;">Terms of Service</a> 
+                            and 
+                            <a href="#" style="color: var(--primary-color); text-decoration: none;">Privacy Policy</a>
+                        </span>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-bottom: 1rem;">
+                    <i class="fas fa-user-plus"></i>
+                    Create Account
+                </button>
+            </form>
+
+            <div style="text-align: center; padding-top: 1rem; border-top: 1px solid var(--border-light);">
+                <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                    Already have an account?
+                </p>
+                <a href="/login" class="btn btn-secondary" style="width: 100%;">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Sign In
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+body {
+    background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+    min-height: 100vh;
+}
+</style>
+{% endblock %}

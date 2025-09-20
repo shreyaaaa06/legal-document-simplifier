@@ -1,0 +1,275 @@
+<!-- dashboard.html -->
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Legal Document Simplifier{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header -->
+    <div style="margin-bottom: 2rem;">
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-subtitle">Manage your legal documents and track important deadlines</p>
+    </div>
+
+    <!-- Quick Stats -->
+    <div id="dashboard-stats" class="stats-grid">
+        <!-- Stats will be loaded by JavaScript -->
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-spinner fa-spin"></i>
+            </div>
+            <div class="stat-number">...</div>
+            <div class="stat-label">Loading...</div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
+        <a href="/upload" class="btn btn-primary">
+            <i class="fas fa-upload"></i>
+            Upload New Document
+        </a>
+        <button class="btn btn-secondary" onclick="loadDashboard()">
+            <i class="fas fa-refresh"></i>
+            Refresh
+        </button>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; align-items: start;">
+        <!-- Recent Documents -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="section-title" style="margin: 0;">Recent Documents</h2>
+            </div>
+            <div class="card-body">
+                <div id="recent-documents" class="document-list">
+                    <!-- Documents will be loaded by JavaScript -->
+                    <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                        <p>Loading documents...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div>
+            <!-- Upcoming Deadlines -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="card-header">
+                    <h3 style="margin: 0; font-size: 1.1rem;">
+                        <i class="fas fa-clock" style="color: var(--warning-color);"></i>
+                        Upcoming Deadlines
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div id="upcoming-deadlines">
+                        <div style="text-align: center; color: var(--text-secondary); padding: 1rem;">
+                            <i class="fas fa-calendar-check" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+                            <p>No upcoming deadlines</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Calendar Widget -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="card-header">
+                    <h3 style="margin: 0; font-size: 1.1rem;">
+                        <i class="fas fa-calendar-alt" style="color: var(--primary-color);"></i>
+                        Calendar View
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <button class="btn btn-primary btn-sm" onclick="openCalendarView()" style="width: 100%;">
+                        <i class="fas fa-calendar"></i>
+                        View Full Calendar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Risk Alerts -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <div class="card-header">
+                    <h3 style="margin: 0; font-size: 1.1rem;">
+                        <i class="fas fa-exclamation-triangle" style="color: var(--danger-color);"></i>
+                        High Risk Alerts
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div id="risk-alerts">
+                        <div style="text-align: center; color: var(--text-secondary); padding: 1rem;">
+                            <i class="fas fa-shield-alt" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+                            <p>No high-risk items</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Tips -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 style="margin: 0; font-size: 1.1rem;">
+                        <i class="fas fa-lightbulb" style="color: var(--accent-color);"></i>
+                        Quick Tips
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div style="font-size: 0.9rem; line-height: 1.6; color: var(--text-secondary);">
+                        <div style="margin-bottom: 1rem;">
+                            <i class="fas fa-check" style="color: var(--success-color); margin-right: 0.5rem;"></i>
+                            Upload documents in PDF or Word format for best results
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <i class="fas fa-check" style="color: var(--success-color); margin-right: 0.5rem;"></i>
+                            Use the Q&A feature to get specific answers about your documents
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <i class="fas fa-check" style="color: var(--success-color); margin-right: 0.5rem;"></i>
+                            Review high-risk clauses carefully before signing
+                        </div>
+                        <div>
+                            <i class="fas fa-check" style="color: var(--success-color); margin-right: 0.5rem;"></i>
+                            Set reminders for important deadlines
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@media (max-width: 968px) {
+    div[style*="grid-template-columns: 2fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
+
+{% block extra_scripts %}
+<script>
+// Dashboard-specific functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Load dashboard data when page loads
+    if (App.isAuthenticated) {
+        loadDashboard();
+    }
+});
+
+// Enhanced dashboard loading with better error handling
+async function loadDashboard() {
+    try {
+        showLoading('Loading dashboard...');
+        
+        const [documentsResponse, dashboardResponse] = await Promise.all([
+            apiCall('/documents/'),
+            apiCall('/documents/dashboard').catch(() => ({ // Fallback for dashboard endpoint
+                total_documents: 0,
+                processing_documents: 0,
+                completed_documents: 0,
+                overall_stats: { high_risk_clauses: 0 }
+            }))
+        ]);
+        
+        App.documents = documentsResponse.documents || [];
+        
+        renderDashboardStats(dashboardResponse);
+        renderRecentDocuments(App.documents);
+        renderUpcomingDeadlines(dashboardResponse.upcoming_deadlines || []);
+        renderRiskAlerts(dashboardResponse.high_risk_alerts || []);
+        
+    } catch (error) {
+        console.error('Dashboard load failed:', error);
+        showToast('Failed to load dashboard data', 'error');
+        
+        // Show empty state
+        renderRecentDocuments([]);
+    } finally {
+        hideLoading();
+    }
+}
+
+function renderUpcomingDeadlines(deadlines) {
+    const container = document.getElementById('upcoming-deadlines');
+    if (!container) return;
+    
+    if (deadlines.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; color: var(--text-secondary); padding: 1rem;">
+                <i class="fas fa-calendar-check" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+                <p>No upcoming deadlines</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = deadlines.slice(0, 5).map(deadline => `
+        <div style="padding: 0.75rem 0; border-bottom: 1px solid var(--border-light); last:border-bottom: none;">
+            <div style="font-weight: 500; margin-bottom: 0.25rem;">${deadline.deadline}</div>
+            <div style="font-size: 0.9rem; color: var(--text-secondary);">${deadline.description}</div>
+        </div>
+    `).join('');
+}
+
+function renderRiskAlerts(alerts) {
+    const container = document.getElementById('risk-alerts');
+    if (!container) return;
+    
+    if (alerts.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; color: var(--text-secondary); padding: 1rem;">
+                <i class="fas fa-shield-alt" style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+                <p>No high-risk items</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = alerts.slice(0, 3).map(alert => `
+        <div style="padding: 0.75rem 0; border-bottom: 1px solid var(--border-light);">
+            <div class="risk-indicator risk-high" style="margin-bottom: 0.5rem; font-size: 0.8rem;">
+                <i class="fas fa-exclamation-triangle"></i>
+                High Risk
+            </div>
+            <div style="font-size: 0.9rem; color: var(--text-secondary);">${alert.description}</div>
+        </div>
+    `).join('');
+}
+async function loadDeadlinesFromDocuments() {
+    try {
+        const documents = App.documents.filter(doc => doc.status === 'completed');
+        let allDeadlines = [];
+        
+        for (const doc of documents) {
+            try {
+                const response = await apiCall(`/documents/${doc.id}`);
+                if (response.clauses) {
+                    response.clauses.forEach(clause => {
+                        if (clause.deadlines && clause.deadlines.length > 0) {
+                            clause.deadlines.forEach(deadline => {
+                                allDeadlines.push({
+                                    deadline: deadline,
+                                    description: `${doc.filename} - Section ${clause.section_number}`,
+                                    document_name: doc.filename,
+                                    urgency: 'medium' // Default urgency
+                                });
+                            });
+                        }
+                    });
+                }
+            } catch (error) {
+                console.log(`Failed to load deadlines from ${doc.filename}`);
+            }
+        }
+        
+        // Update the deadlines display
+        renderUpcomingDeadlines(allDeadlines.slice(0, 5)); // Show top 5
+        
+    } catch (error) {
+        console.error('Failed to load deadlines from documents:', error);
+    }
+}
+</script>
+{% endblock %}
+{% endblock %}
